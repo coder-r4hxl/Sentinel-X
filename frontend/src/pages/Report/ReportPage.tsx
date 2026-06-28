@@ -1,66 +1,139 @@
 import { motion } from 'framer-motion';
-import { FileText, ShieldCheck } from 'lucide-react';
 import { useMemo } from 'react';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AiSummary } from '@/components/report/summary/AiSummary';
+import { ExecutiveHeader } from '@/components/report/summary/ExecutiveHeader';
+import { ScoreSummaryCard } from '@/components/report/summary/ScoreSummaryCard';
+import { SystemInfoCard } from '@/components/report/summary/SystemInfoCard';
+import { ReportCharts } from '@/components/report/charts/ReportCharts';
+import { ReportExports } from '@/components/report/exports/ReportExports';
+import { ReportFindings } from '@/components/report/findings/ReportFindings';
+import { detectBrowserInfo } from '@/services/browserService';
+import { buildReportViewModel } from '@/services/reportService';
 import { useAssessmentStore } from '@/store/assessmentStore';
 
 export default function ReportPage() {
   const { report } = useAssessmentStore();
 
-  const summary = useMemo(() => {
+  const viewModel = useMemo(() => {
     if (!report) {
-      return [];
+      return null;
     }
 
-    return [
-      { label: 'Browser Security Score', value: `${report.browserSecurityScore}/100` },
-      { label: 'Privacy Score', value: `${report.privacyScore}/100` },
-      { label: 'Compatibility Score', value: `${report.compatibilityScore}/100` },
-      { label: 'Risk Rating', value: report.riskRating },
-    ];
+    return buildReportViewModel(report, detectBrowserInfo());
   }, [report]);
+
+  const handleDownloadJson = () => {
+    if (!viewModel) {
+      return;
+    }
+
+    const blob = new Blob([JSON.stringify(viewModel, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `sentinel-x-report-${viewModel.assessmentId}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleDownloadPdf = () => {
+    window.print();
+  };
+
+  const handleCopyReport = async () => {
+    if (!viewModel) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(`${viewModel.aiSummary}\n\nScore: ${viewModel.score}/100\nRisk: ${viewModel.risk}`);
+  };
+
+  const handlePrintReport = () => {
+    window.print();
+  };
+
+  const handleShareSummary = async () => {
+    if (!viewModel || !navigator.share) {
+      return;
+    }
+
+    await navigator.share({
+      title: 'Sentinel-X security report',
+      text: `${viewModel.aiSummary}\nScore: ${viewModel.score}/100`,
+    });
+  };
+
+  if (!viewModel) {
+    return (
+      <div className="min-h-screen bg-[#05070A] px-4 py-16 text-slate-100 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/10 bg-[#0B1118]/85 p-8 text-center">
+          <h1 className="text-3xl font-semibold text-white">No report available yet</h1>
+          <p className="mt-4 text-lg leading-8 text-slate-300">Complete the assessment flow to produce a board-ready executive report.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#05070A] px-4 py-10 text-slate-100 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#00B8FF]/20 bg-[#00B8FF]/10 px-3.5 py-1.5 text-sm text-[#8bdbff]">
-            <ShieldCheck size={14} />
-            Executive report
+      <div className="mx-auto flex max-w-7xl flex-col gap-8">
+        <ExecutiveHeader
+          assessmentId={viewModel.assessmentId}
+          timestamp={viewModel.timestamp}
+          score={viewModel.score}
+          risk={viewModel.risk}
+          browser={viewModel.browser}
+          os={viewModel.os}
+        />
+
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-between gap-4 rounded-[1.75rem] border border-white/10 bg-[#0B1118]/85 px-5 py-4">
+          <div>
+            <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Export options</p>
+            <p className="mt-2 text-lg font-semibold text-white">Share or archive this assessment package</p>
           </div>
-          <h1 className="mt-6 text-3xl font-semibold tracking-[-0.03em] text-white sm:text-4xl">Assessment summary</h1>
-          <p className="mt-4 text-lg leading-8 text-slate-300">Sentinel-X compiles the browser posture findings into a concise, board-ready view of security posture.</p>
+          <ReportExports
+            onDownloadJson={handleDownloadJson}
+            onDownloadPdf={handleDownloadPdf}
+            onCopyReport={handleCopyReport}
+            onPrintReport={handlePrintReport}
+            onShareSummary={handleShareSummary}
+          />
         </motion.div>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-          <Card className="border-white/10 bg-[#0B1118]/85">
-            <CardHeader>
-              <CardTitle>Summary metrics</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              {summary.map((item) => (
-                <div key={item.label} className="rounded-[1.25rem] border border-white/10 bg-[#05070A]/70 p-4">
-                  <p className="text-sm text-slate-400">{item.label}</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{item.value}</p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+          {viewModel.summaryCards.map((card) => (
+            <ScoreSummaryCard key={card.label} label={card.label} score={card.score} detail={card.detail} status={card.status} />
+          ))}
+        </div>
 
-          <Card className="border-white/10 bg-[#0B1118]/85">
-            <CardHeader>
-              <CardTitle>Findings overview</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {report?.findings.map((finding) => (
-                <div key={finding} className="flex items-start gap-3 rounded-[1rem] border border-white/10 bg-[#05070A]/70 p-3 text-sm text-slate-300">
-                  <FileText size={16} className="mt-0.5 text-[#00B8FF]" />
-                  <span>{finding}</span>
+        <ReportCharts overview={viewModel.overview} capabilities={viewModel.capabilities} permissions={viewModel.permissions} stages={viewModel.stages} />
+
+        <div className="grid gap-6 2xl:grid-cols-[1.1fr_0.9fr]">
+          <div className="space-y-6">
+            <AiSummary text={viewModel.aiSummary} />
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#0B1118]/85 p-5">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-lg font-semibold text-white">Priority findings</p>
+                  <p className="mt-1 text-sm text-slate-400">The highest-value issues and recommendations.</p>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+              </div>
+              <ReportFindings groups={viewModel.findings} />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="rounded-[1.75rem] border border-white/10 bg-[#0B1118]/85 p-5">
+              <p className="text-lg font-semibold text-white">System information</p>
+              <p className="mt-1 text-sm text-slate-400">Detailed environment snapshot captured during the assessment.</p>
+              <div className="mt-5 space-y-4">
+                {viewModel.systemInfo.map((section) => (
+                  <SystemInfoCard key={section.title} title={section.title} items={section.items} />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
