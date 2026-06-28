@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Activity, ArrowRight, CheckCircle2, PlayCircle, ShieldCheck, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const trustIndicators = [
   'SOC-ready operations',
@@ -64,15 +65,15 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
             className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center"
           >
-            <motion.a
-              href="#assessment"
-              whileHover={{ y: -1, scale: 1.01 }}
-              whileTap={{ scale: 0.98 }}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#00B8FF] px-6 py-3.5 text-sm font-semibold text-[#05070A] shadow-[0_16px_45px_rgba(0,184,255,0.22)] transition duration-200 hover:bg-[#2dc8ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8FF]/70"
-            >
-              Start a Security Review
-              <ArrowRight size={16} />
-            </motion.a>
+            <motion.div whileHover={{ y: -1, scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+              <Link
+                to="/boot"
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#00B8FF] px-6 py-3.5 text-sm font-semibold text-[#05070A] shadow-[0_16px_45px_rgba(0,184,255,0.22)] transition duration-200 hover:bg-[#2dc8ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8FF]/70"
+              >
+                Start a Security Review
+                <ArrowRight size={16} />
+              </Link>
+            </motion.div>
             <motion.a
               href="#platform"
               whileHover={{ y: -1, scale: 1.01 }}

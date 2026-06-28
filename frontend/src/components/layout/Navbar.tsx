@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, Menu, ShieldCheck, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const navItems = [
   { label: 'Platform', href: '#platform' },
@@ -55,22 +56,22 @@ export default function Navbar() {
 
         <div className="hidden items-center gap-3 md:flex">
           <motion.a
-            href="#assessment"
+            href="#platform"
             whileHover={{ y: -1, scale: 1.01 }}
             whileTap={{ scale: 0.98 }}
             className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-sm font-medium text-slate-300 transition duration-200 hover:border-[#00B8FF]/40 hover:bg-white/[0.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8FF]/70"
           >
             Explore Platform
           </motion.a>
-          <motion.a
-            href="#assessment"
-            whileHover={{ y: -1, scale: 1.01 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 rounded-full bg-[#00B8FF] px-4 py-2 text-sm font-semibold text-[#05070A] shadow-[0_12px_35px_rgba(0,184,255,0.22)] transition duration-200 hover:bg-[#2dc8ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8FF]/70"
-          >
-            Begin Assessment
-            <ArrowRight size={16} />
-          </motion.a>
+          <motion.div whileHover={{ y: -1, scale: 1.01 }} whileTap={{ scale: 0.98 }}>
+            <Link
+              to="/boot"
+              className="inline-flex items-center gap-2 rounded-full bg-[#00B8FF] px-4 py-2 text-sm font-semibold text-[#05070A] shadow-[0_12px_35px_rgba(0,184,255,0.22)] transition duration-200 hover:bg-[#2dc8ff] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00B8FF]/70"
+            >
+              Begin Assessment
+              <ArrowRight size={16} />
+            </Link>
+          </motion.div>
         </div>
 
         <button
@@ -103,14 +104,14 @@ export default function Navbar() {
                   {item.label}
                 </a>
               ))}
-              <a
-                href="#assessment"
+              <Link
+                to="/boot"
                 className="mt-2 inline-flex items-center justify-center gap-2 rounded-full bg-[#00B8FF] px-4 py-2.5 font-semibold text-[#05070A]"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Begin Assessment
                 <ArrowRight size={16} />
-              </a>
+              </Link>
             </div>
           </motion.div>
         ) : null}
