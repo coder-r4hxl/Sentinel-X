@@ -17,6 +17,7 @@ export default function AppRoutes() {
       <Route path="/boot" element={<BootPage />} />
       <Route path="/identity" element={<IdentityPage />} />
       <Route path="/permission" element={<PermissionPage />} />
+      <Route path="/permissions" element={<PermissionPage />} />
       <Route path="/assessment" element={<AssessmentPage />} />
       <Route path="/report" element={<ReportPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
