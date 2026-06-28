@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 
+import AdvisorPage from '../pages/Advisor/AdvisorPage';
 import AssessmentPage from '../pages/Assessment/AssessmentPage';
 import BootPage from '../pages/Boot/BootPage';
 import DashboardPage from '../pages/Dashboard/DashboardPage';
@@ -20,6 +21,7 @@ export default function AppRoutes() {
       <Route path="/permissions" element={<PermissionPage />} />
       <Route path="/assessment" element={<AssessmentPage />} />
       <Route path="/report" element={<ReportPage />} />
+      <Route path="/advisor" element={<AdvisorPage />} />
       <Route path="/dashboard" element={<DashboardPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/not-found" element={<NotFoundPage />} />

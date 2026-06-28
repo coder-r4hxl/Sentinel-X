@@ -25,25 +25,45 @@ function severityStyles(severity: FindingGroup['severity']) {
 }
 
 export function ReportFindings({ groups }: ReportFindingsProps) {
+  const sections = [
+    { title: 'Critical Issues', items: groups.filter((group) => group.severity === 'critical') },
+    { title: 'Warnings', items: groups.filter((group) => group.severity === 'warning') },
+    { title: 'Recommendations', items: groups.filter((group) => group.severity === 'recommendation') },
+    { title: 'Passed Checks', items: groups.filter((group) => group.severity === 'passed') },
+  ];
+
   return (
-    <div className="space-y-4">
-      {groups.map((group, index) => (
-        <motion.div key={group.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} className="rounded-[1.25rem] border border-white/10 bg-[#0B1118]/85 p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-lg font-semibold text-white">{group.title}</p>
-              <p className="mt-2 text-sm leading-7 text-slate-300">{group.description}</p>
-            </div>
-            <div className={`rounded-full border px-2.5 py-1 text-xs uppercase tracking-[0.24em] ${severityStyles(group.severity)}`}>
-              {group.severity}
+    <div className="space-y-6">
+      {sections.map((section) => {
+        if (!section.items.length) {
+          return null;
+        }
+
+        return (
+          <div key={section.title} className="rounded-[1.25rem] border border-white/10 bg-[#05070A]/70 p-4">
+            <p className="text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">{section.title}</p>
+            <div className="mt-4 space-y-3">
+              {section.items.map((group, index) => (
+                <motion.div key={group.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }} className="rounded-[1rem] border border-white/10 bg-[#0B1118]/85 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold text-white">{group.title}</p>
+                      <p className="mt-2 text-sm leading-7 text-slate-300">{group.description}</p>
+                    </div>
+                    <div className={`rounded-full border px-2.5 py-1 text-xs uppercase tracking-[0.24em] ${severityStyles(group.severity)}`}>
+                      {group.severity}
+                    </div>
+                  </div>
+                  <div className="mt-4 rounded-[0.9rem] border border-white/10 bg-[#05070A]/70 p-3 text-sm text-slate-300">
+                    <p className="text-slate-400">Recommended action</p>
+                    <p className="mt-2">{group.action}</p>
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
-          <div className="mt-4 rounded-[1rem] border border-white/10 bg-[#05070A]/70 p-3 text-sm text-slate-300">
-            <p className="text-slate-400">Recommended action</p>
-            <p className="mt-2">{group.action}</p>
-          </div>
-        </motion.div>
-      ))}
+        );
+      })}
     </div>
   );
 }
