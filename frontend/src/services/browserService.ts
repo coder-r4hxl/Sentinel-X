@@ -49,7 +49,7 @@ export function detectBrowserInfo(): BrowserSnapshot {
     })(),
     indexedDB: 'indexedDB' in window,
     serviceWorker: 'serviceWorker' in navigator,
-    notificationPermission: 'Notification' in window ? Notification.permission : 'unavailable',
+    notificationPermission: 'Notification' in window ? (Notification.permission === 'default' ? 'prompt' : (Notification.permission as PermissionState)) : 'unavailable',
     clipboardSupport: !!navigator.clipboard,
     cameraSupport: !!mediaDevices?.getUserMedia,
     microphoneSupport: !!mediaDevices?.getUserMedia,

@@ -1,4 +1,4 @@
-import type { AssessmentProgress, AssessmentReport, AssessmentCheckResult, BrowserSnapshot } from '../types';
+import type { AssessmentProgress, AssessmentReport, AssessmentCheckResult } from '../types';
 import { detectBrowserInfo } from './browserService';
 
 const assessmentSteps = [

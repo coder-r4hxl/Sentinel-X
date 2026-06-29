@@ -1,17 +1,5 @@
 import type { PermissionCapability, PermissionState } from '../types';
 
-function getPermissionState(name: PermissionName): PermissionState {
-  if (navigator.permissions && navigator.permissions.query) {
-    try {
-      const permission = navigator.permissions.query({ name } as PermissionDescriptor);
-      return 'prompt';
-    } catch {
-      return 'unavailable';
-    }
-  }
-  return 'unavailable';
-}
-
 export async function evaluatePermissionCapabilities(): Promise<PermissionCapability[]> {
   const capabilities: PermissionCapability[] = [
     {
@@ -20,7 +8,7 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
       description: 'Enable policy alerts and assessment prompts.',
       required: true,
       state: 'unavailable',
-      supported: 'Notification' in window,
+      supported: typeof Notification !== 'undefined',
       compatibility: 'Notification API supported in modern Chromium and Firefox browsers.',
     },
     {
@@ -29,7 +17,7 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
       description: 'Allow safe, in-session clipboard inspection when needed.',
       required: false,
       state: 'unavailable',
-      supported: !!navigator.clipboard,
+      supported: typeof navigator !== 'undefined' && !!navigator.clipboard,
       compatibility: 'Clipboard APIs are available in secure contexts.',
     },
     {
@@ -38,7 +26,7 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
       description: 'Permit secure clipboard writes for evidence transfer.',
       required: false,
       state: 'unavailable',
-      supported: !!navigator.clipboard,
+      supported: typeof navigator !== 'undefined' && !!navigator.clipboard,
       compatibility: 'Clipboard APIs are available in secure contexts.',
     },
     {
@@ -47,7 +35,7 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
       description: 'Optional support for assisted identity verification.',
       required: false,
       state: 'unavailable',
-      supported: !!navigator.mediaDevices?.getUserMedia,
+      supported: typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia,
       compatibility: 'Camera access requires user consent and browser support.',
     },
     {
@@ -56,7 +44,7 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
       description: 'Optional support for voice-guided review workflows.',
       required: false,
       state: 'unavailable',
-      supported: !!navigator.mediaDevices?.getUserMedia,
+      supported: typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia,
       compatibility: 'Microphone access requires user consent and browser support.',
     },
     {
@@ -65,7 +53,7 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
       description: 'Optional context for device security posture.',
       required: false,
       state: 'unavailable',
-      supported: 'geolocation' in navigator,
+      supported: typeof navigator !== 'undefined' && 'geolocation' in navigator,
       compatibility: 'Geolocation requires explicit user approval and HTTPS.',
     },
   ];
@@ -74,8 +62,9 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
     return capabilities;
   }
 
-  if ('Notification' in window) {
-    capabilities[0].state = Notification.permission as PermissionState;
+  if (typeof Notification !== 'undefined') {
+    const p = Notification.permission;
+    capabilities[0].state = p === 'default' ? 'prompt' : (p as PermissionState);
   }
 
   if (navigator.clipboard) {
@@ -83,7 +72,7 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
     capabilities[2].state = 'prompt';
   }
 
-  if (navigator.mediaDevices?.getUserMedia) {
+  if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
     capabilities[3].state = 'prompt';
     capabilities[4].state = 'prompt';
   }
@@ -96,9 +85,13 @@ export async function evaluatePermissionCapabilities(): Promise<PermissionCapabi
 }
 
 export async function requestPermission(id: PermissionCapability['id']): Promise<PermissionState> {
-  if (id === 'notifications' && 'Notification' in window) {
+  if (typeof window === 'undefined') {
+    return 'unavailable';
+  }
+
+  if (id === 'notifications' && typeof Notification !== 'undefined') {
     const permission = await Notification.requestPermission();
-    return permission as PermissionState;
+    return permission === 'default' ? 'prompt' : (permission as PermissionState);
   }
 
   if ((id === 'clipboard-read' || id === 'clipboard-write') && navigator.clipboard) {
@@ -117,7 +110,10 @@ export async function requestPermission(id: PermissionCapability['id']): Promise
   if (id === 'geolocation' && 'geolocation' in navigator) {
     try {
       await new Promise<void>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(() => resolve(), () => reject(new Error('denied')));
+        navigator.geolocation.getCurrentPosition(
+          () => resolve(),
+          () => reject(new Error('denied')),
+        );
       });
       return 'granted';
     } catch {

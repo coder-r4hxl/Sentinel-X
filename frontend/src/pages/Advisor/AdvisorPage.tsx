@@ -15,7 +15,7 @@ const quickPrompts = ['Is my browser secure?', 'Why is my score low?', 'How can 
 export default function AdvisorPage() {
   const navigate = useNavigate();
   const { report } = useAssessmentStore();
-  const { messages, draft, setDraft, submitQuestion, clearConversation } = useChatStore();
+  const { messages, setDraft, submitQuestion, clearConversation } = useChatStore();
   const { speaking, speakingText, muted, toggleMute, stopSpeaking, speak } = useVoiceStore();
   const [input, setInput] = useState('');
 
