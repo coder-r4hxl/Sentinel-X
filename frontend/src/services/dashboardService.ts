@@ -1,0 +1,317 @@
+import type { AssessmentReport } from '../types';
+import type { BrowserSnapshot } from '../types';
+import type {
+  AIRecommendationItem,
+  BrowserHealth,
+  DashboardViewModel,
+  EnterpriseMetric,
+  PermissionOverviewData,
+  QuickActionItem,
+  RecentAssessmentEntry,
+  RiskLevel,
+  TimelineStage,
+  ThreatFinding,
+  Tone,
+} from '../types/dashboard';
+
+import { buildReportViewModel } from './reportService';
+
+
+import type { ReportViewModel } from './reportService';
+
+
+export function scoreTone(score: number): Tone {
+  if (score >= 85) return 'good';
+  if (score >= 70) return 'info';
+  if (score >= 50) return 'warn';
+  return 'bad';
+}
+
+export function computeOverallRisk(score: number): RiskLevel {
+  if (score >= 90) return 'Excellent';
+  if (score >= 78) return 'Good';
+  if (score >= 62) return 'Moderate';
+  if (score >= 45) return 'High';
+  return 'Critical';
+}
+
+export function makeTimeline(stages: Array<{ name: string; value: number }>): TimelineStage[] {
+  return stages.map((s, idx) => ({
+    id: s.name,
+    index: idx,
+    title: s.name,
+    value: s.value,
+    timestamp: `T+${idx + 1}m`,
+  }));
+}
+
+export function buildBrowserHealth(args: {
+  report: AssessmentReport | null;
+  snapshot: BrowserSnapshot | null;
+  riskLevel: RiskLevel | null;
+  viewModel: ReportViewModel | null;
+}): BrowserHealth | null {
+  const { report, snapshot, riskLevel, viewModel } = args;
+  if (!report || !snapshot || !viewModel) return null;
+
+  const notifScore =
+    snapshot.notificationPermission === 'denied'
+      ? 65
+      : snapshot.notificationPermission === 'prompt'
+        ? 80
+        : 92;
+
+  const permBase = viewModel.permissions.find((p) => p.name === 'Denied')?.value ?? 1;
+  const permissionHealth = 100 - permBase * 18;
+
+  return {
+    security: report.browserSecurityScore ?? 0,
+    privacy: report.privacyScore ?? 0,
+    compatibility: report.compatibilityScore ?? 0,
+    permissions: Math.max(0, Math.min(100, permissionHealth)),
+    notifications: notifScore,
+    quickSummary:
+      riskLevel === 'Excellent'
+        ? 'Enterprise-ready browser posture'
+        : riskLevel === 'Good'
+          ? 'Generally healthy posture with minor gaps'
+          : riskLevel === 'Moderate'
+            ? 'Mixed posture: prioritize hardening'
+            : riskLevel === 'High'
+              ? 'Elevated risk: address critical permission signals'
+              : 'Critical posture: immediate remediation recommended',
+  };
+}
+
+export function buildPermissionOverview(args: {
+  evaluated: boolean;
+  capabilities: Array<{ state?: string; label?: string } & { state: string }>;
+}): PermissionOverviewData | null {
+  const { evaluated, capabilities } = args;
+  if (!evaluated || !capabilities.length) return null;
+
+  const normalize = (s: string) => s.toLowerCase();
+
+  const byState = {
+    granted: capabilities.filter((c) => normalize(c.state) === 'granted').length,
+    prompt: capabilities.filter((c) => normalize(c.state) === 'prompt').length,
+    denied: capabilities.filter((c) => normalize(c.state) === 'denied').length,
+    unavailable: capabilities.filter((c) => normalize(c.state) === 'unavailable').length,
+  };
+
+  const total = Math.max(1, capabilities.length);
+  const permissionScore = Math.round(((byState.granted * 1 + byState.prompt * 0.6) / total) * 100);
+
+  return { byState, permissionScore };
+}
+
+export function buildRecentHistory(args: {
+  viewModel: ReportViewModel | null;
+}): RecentAssessmentEntry[] {
+  const { viewModel } = args;
+  if (!viewModel) return [];
+
+  const base = {
+    id: viewModel.assessmentId,
+    date: viewModel.timestamp,
+    score: viewModel.score,
+    risk: viewModel.risk,
+  } satisfies RecentAssessmentEntry;
+
+  return [base];
+}
+
+export function buildThreatAndFindings(args: {
+  viewModel: ReportViewModel | null;
+}): ThreatFinding[] {
+  const { viewModel } = args;
+  if (!viewModel) return [];
+  return viewModel.findings;
+}
+
+export function buildAIRecommendations(args: {
+  viewModel: ReportViewModel | null;
+}): AIRecommendationItem[] {
+  const { viewModel } = args;
+  if (!viewModel) return [];
+
+  const recs = viewModel.findings
+    .filter((f) => f.severity === 'critical' || f.severity === 'warning' || f.severity === 'recommendation')
+    .slice(0, 6)
+    .map((f) => ({
+      title: f.title,
+      recommendation: f.action,
+      severity: f.severity,
+    }));
+
+  if (!recs.length) {
+    return [
+      {
+        title: 'Maintain strong posture',
+        recommendation:
+          'Continue monitoring browser permissions and keep the browser runtime and extensions updated.',
+        severity: 'passed',
+      },
+    ];
+  }
+
+  return recs;
+}
+
+export function buildExecutiveMetrics(args: {
+  report: AssessmentReport | null;
+  viewModel: ReportViewModel | null;
+  executiveScore: number | null;
+}): EnterpriseMetric[] {
+  const { report, viewModel, executiveScore } = args;
+  if (!report || !viewModel) return [];
+
+  const score = viewModel.score ?? executiveScore ?? 0;
+
+  return [
+    {
+      label: 'Executive Security Score',
+      value: score,
+      sublabel: 'Overall readiness for enterprise rollout',
+      tone: scoreTone(score),
+    },
+    {
+      label: 'Browser Health',
+      value: report.browserSecurityScore,
+      sublabel: 'Runtime posture & integrity checks',
+      tone: scoreTone(report.browserSecurityScore),
+    },
+    {
+      label: 'Privacy Posture',
+      value: report.privacyScore,
+      sublabel: 'Controls, preference signals, & permission posture',
+      tone: scoreTone(report.privacyScore),
+    },
+    {
+      label: 'Compatibility Coverage',
+      value: report.compatibilityScore,
+      sublabel: 'API support & environment compatibility',
+      tone: scoreTone(report.compatibilityScore),
+    },
+  ];
+}
+
+export function buildQuickActions(args: {
+  viewModel: ReportViewModel | null;
+  navigate: (to: string) => void;
+}): QuickActionItem[] {
+  const { viewModel, navigate } = args;
+  if (!viewModel) {
+    return [
+      {
+        id: 'start-assessment',
+        label: 'Run assessment',
+        desc: 'Generate enterprise-ready report artifacts',
+        icon: 'ShieldCheck',
+        onClick: () => navigate('/assessment'),
+      },
+    ];
+  }
+
+  return [
+    {
+      id: 'open-report',
+      label: 'Open executive report',
+      desc: 'View full findings and system snapshot',
+      icon: 'ExternalLink',
+      onClick: () => navigate('/report'),
+    },
+    {
+      id: 'review-permissions',
+      label: 'Review permissions',
+      desc: 'Validate required access and states',
+      icon: 'Globe',
+      onClick: () => navigate('/permission'),
+    },
+    {
+      id: 'start-new-assessment',
+      label: 'Re-run assessment',
+      desc: 'Refresh the dashboard with current posture',
+      icon: 'Shield',
+      onClick: () => navigate('/assessment'),
+    },
+  ];
+}
+
+export function buildDashboardViewModel(args: {
+  report: AssessmentReport | null;
+  snapshot: BrowserSnapshot | null;
+  capabilities: Array<{ id?: string; label?: string; description?: string; state: string; supported: boolean; compatibility: string }>;
+  evaluated: boolean;
+  navigate: (to: string) => void;
+}): DashboardViewModel {
+  const { report, snapshot, capabilities, evaluated, navigate } = args;
+
+  if (!report || !snapshot) {
+    return {
+      executiveScore: null,
+      riskLevel: null,
+      executiveMetrics: [],
+      browserHealth: null,
+      permissionOverview: null,
+      timeline: [],
+      recentHistory: [],
+      threatAndFindings: [],
+      aiRecommendations: [],
+      quickActions: buildQuickActions({ viewModel: null, navigate }),
+      reportViewModel: null,
+      capabilities,
+    };
+  }
+
+  const viewModel = buildReportViewModel(report, snapshot);
+
+  const executiveScore = viewModel.score;
+  const riskLevel = computeOverallRisk(executiveScore);
+
+  const executiveMetrics = buildExecutiveMetrics({ report, viewModel, executiveScore });
+
+  const browserHealth = buildBrowserHealth({ report, snapshot, riskLevel, viewModel });
+
+  const permissionOverview = buildPermissionOverview({
+    evaluated,
+    capabilities: capabilities.map((c) => ({
+      state: c.state,
+    })),
+  });
+
+
+  const timeline = makeTimeline(viewModel.stages);
+
+  const recentHistory = buildRecentHistory({ viewModel });
+  const threatAndFindings = buildThreatAndFindings({ viewModel });
+  const aiRecommendations = buildAIRecommendations({ viewModel });
+
+  const quickActions = buildQuickActions({ viewModel, navigate });
+
+  return {
+    executiveScore,
+    riskLevel,
+    executiveMetrics,
+    browserHealth,
+    permissionOverview,
+    timeline,
+    recentHistory,
+    threatAndFindings,
+    aiRecommendations,
+    quickActions,
+    reportViewModel: {
+      assessmentId: viewModel.assessmentId,
+      timestamp: viewModel.timestamp,
+      overview: viewModel.overview,
+      capabilities: viewModel.capabilities,
+      permissions: viewModel.permissions,
+      stages: viewModel.stages,
+      score: viewModel.score,
+      risk: viewModel.risk,
+      findings: viewModel.findings,
+      aiSummary: viewModel.aiSummary,
+    },
+    capabilities,
+  };
+}
