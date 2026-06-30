@@ -13,6 +13,9 @@ import type {
   ThreatFinding,
   Tone,
 } from '../types/dashboard';
+import type { PermissionCapability } from '../types';
+
+
 
 import { buildReportViewModel } from './reportService';
 
@@ -85,9 +88,11 @@ export function buildBrowserHealth(args: {
 
 export function buildPermissionOverview(args: {
   evaluated: boolean;
-  capabilities: Array<{ state?: string; label?: string } & { state: string }>;
+  capabilities: PermissionCapability[];
 }): PermissionOverviewData | null {
+
   const { evaluated, capabilities } = args;
+
   if (!evaluated || !capabilities.length) return null;
 
   const normalize = (s: string) => s.toLowerCase();
@@ -241,10 +246,11 @@ export function buildQuickActions(args: {
 export function buildDashboardViewModel(args: {
   report: AssessmentReport | null;
   snapshot: BrowserSnapshot | null;
-  capabilities: Array<{ id?: string; label?: string; description?: string; state: string; supported: boolean; compatibility: string }>;
+  capabilities: PermissionCapability[];
   evaluated: boolean;
   navigate: (to: string) => void;
 }): DashboardViewModel {
+
   const { report, snapshot, capabilities, evaluated, navigate } = args;
 
   if (!report || !snapshot) {
@@ -275,10 +281,11 @@ export function buildDashboardViewModel(args: {
 
   const permissionOverview = buildPermissionOverview({
     evaluated,
-    capabilities: capabilities.map((c) => ({
-      state: c.state,
-    })),
+    capabilities: capabilities.map((c) => c),
   });
+
+
+
 
 
   const timeline = makeTimeline(viewModel.stages);

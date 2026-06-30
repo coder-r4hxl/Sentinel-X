@@ -1,0 +1,41 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+
+<--- Last few GCs --->
+
+[15168:000002BF6DBDC000]     1630 ms: Scavenge 14.5 (17.6) -> 13.8 (18.3) MB, pooled: 0 MB, 12.04 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[15168:000002BF6DBDC000]     2208 ms: Scavenge 15.6 (18.8) -> 14.7 (23.8) MB, pooled: 0 MB, 6.64 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+FATAL ERROR: Zone Allocation failed - process out of memory
+----- Native stack trace -----
+
+
+<--- Last few GCs --->
+
+[15168:000002BF6DBDC000]     2208 ms: Scavenge 15.6 (18.8) -> 14.7 (23.8) MB, pooled: 0 MB, 6.64 / 0.00 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[15168:000002BF6DBDC000]     3133 ms: Scavenge 20.2 (25.7) -> 18.1 (25.7) MB, pooled: 0 MB, 13.22 / 1.03 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+[15168:000002BF6DBDC000]     3259 ms: Scavenge 20.6 (25.9) -> 19.6 (27.7) MB, pooled: 1 MB, 9.79 / 0.01 ms  (average mu = 1.000, current mu = 1.000) allocation failure; 
+
+FATAL ERROR: Committing semi space failed. Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 00007FF7B5FC3D9F 
+ 2: 00007FF7B4C0DCB7 
+ 3: 00007FF7B4A0E4F7 
+ 4: 00007FF7B49A6AEB 
+ 5: 00007FF7B49CF06A 
+ 6: 00007FF7B4A108D6 
+ 7: 00007FF7B4A0FF26 
+ 8: 00007FF7B4A20E82 
+ 9: 00007FF7B4A209AB 
+10: 00007FF7B62F24AD 
+11: 00007FF7B4A0BFC0 
+12: 00007FF7B4A13EE0 
+13: 00007FF7B4888CC4 
+14: 00007FF7B4C3544E 
+15: 00007FF7B6008C00 
+16: 00007FF7B60FB58D 
+17: 00007FF7B60F9B14 
+18: 000002BF080CBD18 

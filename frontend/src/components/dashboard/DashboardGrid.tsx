@@ -24,7 +24,8 @@ export function DashboardGrid({
             <ExecutiveScoreCard executiveMetrics={viewModel.executiveMetrics} />
           </div>
 
-          <BrowserHealthCard browserHealth={viewModel.browserHealth} riskLevel={viewModel.riskLevel} viewModel={viewModel} />
+          <BrowserHealthCard browserHealth={viewModel.browserHealth} riskLevel={viewModel.riskLevel} />
+
 
           <div className="grid gap-6 lg:grid-cols-2">
             <PermissionOverviewCard permissionOverview={viewModel.permissionOverview} capabilities={viewModel.capabilities} onManagePermissions={onManagePermissions} />

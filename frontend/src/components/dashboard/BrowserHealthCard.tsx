@@ -71,12 +71,11 @@ const riskTone = (level: RiskLevel) => {
 export function BrowserHealthCard({
   browserHealth,
   riskLevel,
-  viewModel,
 }: {
   browserHealth: BrowserHealth | null;
   riskLevel: DashboardViewModel['riskLevel'];
-  viewModel: DashboardViewModel;
 }) {
+
   if (!browserHealth) return null;
 
   return (
