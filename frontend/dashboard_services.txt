@@ -1,0 +1,88 @@
+export function computeOverallRisk(score: number): import('../../types/dashboard').RiskLevel {
+  if (score >= 90) return 'Excellent';
+  if (score >= 78) return 'Good';
+  if (score >= 62) return 'Moderate';
+  if (score >= 45) return 'High';
+  return 'Critical';
+}
+
+export function scoreTone(score: number): import('../../types/dashboard').Tone {
+  if (score >= 85) return 'good';
+  if (score >= 70) return 'info';
+  if (score >= 50) return 'warn';
+  return 'bad';
+}
+
+import type { AssessmentReport, BrowserSnapshot } from '../../types';
+import type { BrowserHealth, RiskLevel } from '../../types/dashboard';
+
+import type { ReportViewModel } from './dashboardViewModel';
+
+export function buildBrowserHealth(args: {
+  report: AssessmentReport | null;
+  snapshot: BrowserSnapshot | null;
+  riskLevel: RiskLevel | null;
+  viewModel: ReportViewModel | null;
+}): BrowserHealth | null {
+  const { report, snapshot, riskLevel, viewModel } = args;
+  if (!report || !snapshot || !viewModel) return null;
+
+  const notifScore =
+    snapshot.notificationPermission === 'denied'
+      ? 65
+      : snapshot.notificationPermission === 'prompt'
+        ? 80
+        : 92;
+
+  const permBase = viewModel.permissions.find((p) => p.name === 'Denied')?.value ?? 1;
+  const permissionHealth = 100 - permBase * 18;
+
+  return {
+    security: report.browserSecurityScore ?? 0,
+    privacy: report.privacyScore ?? 0,
+    compatibility: report.compatibilityScore ?? 0,
+    permissions: Math.max(0, Math.min(100, permissionHealth)),
+    notifications: notifScore,
+    quickSummary:
+      riskLevel === 'Excellent'
+        ? 'Enterprise-ready browser posture'
+        : riskLevel === 'Good'
+          ? 'Generally healthy posture with minor gaps'
+          : riskLevel === 'Moderate'
+            ? 'Mixed posture: prioritize hardening'
+            : riskLevel === 'High'
+              ? 'Elevated risk: address critical permission signals'
+              : 'Critical posture: immediate remediation recommended',
+  };
+}
+
+import type { TimelineStage } from '../../types/dashboard';
+
+export function makeTimeline(stages: Array<{ name: string; value: number }>): TimelineStage[] {
+  return stages.map((s, idx) => ({
+    id: s.name,
+    index: idx,
+    title: s.name,
+    value: s.value,
+    timestamp: `T+${idx + 1}m`,
+  }));
+}
+
+import type { RecentAssessmentEntry } from '../../types/dashboard';
+import type { ReportViewModel } from './dashboardViewModel';
+
+export function buildRecentHistory(args: { viewModel: ReportViewModel | null }): RecentAssessmentEntry[] {
+  const { viewModel } = args;
+  if (!viewModel) return [];
+
+  const base = {
+    id: viewModel.assessmentId,
+    date: viewModel.timestamp,
+    score: viewModel.score,
+    risk: viewModel.risk,
+  } satisfies RecentAssessmentEntry;
+
+  return [base];
+}
+
+

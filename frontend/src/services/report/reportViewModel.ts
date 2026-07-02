@@ -48,3 +48,7 @@ export function buildReportViewModel(args: { report: AssessmentReport; snapshot:
   };
 }
 
+ 
+export type { ReportViewModel } from './reportTypes';
+ 
+
