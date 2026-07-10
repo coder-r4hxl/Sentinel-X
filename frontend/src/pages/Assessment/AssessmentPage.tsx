@@ -1,14 +1,12 @@
 import { motion } from 'framer-motion';
 import { ArrowRight, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAssessmentStore } from '@/store/assessmentStore';
-import type { AssessmentCheckResult } from '@/types';
-
-const scoreTone = (score: number) => {
+import type { AssessmentCheckResult } from '@/types'; = (score: number) => {
   if (score >= 85) return 'text-[#14F195]';
   if (score >= 70) return 'text-[#00B8FF]';
   if (score >= 50) return 'text-[#f5c76b]';
