@@ -18,6 +18,34 @@ model User {
   updatedAt   DateTime @updatedAt
 
   assessments Assessment[]
+  cases       Case[]
+}
+
+model Case {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  status      CaseStatus @default(OPEN)
+  severity    Severity   @default(MEDIUM)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum CaseStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 model Assessment {

@@ -1,5 +1,6 @@
 import express from "express";
 import authRoutes from "./routes/auth.routes.js";
+import caseRoutes from "./routes/case.routes.js";
 
 const app = express();
 
@@ -13,5 +14,6 @@ app.get("/", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/cases", caseRoutes);
 
 export default app;
