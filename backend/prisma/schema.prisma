@@ -30,8 +30,24 @@ model Case {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  user     User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evidence Evidence[]
+}
+
+model Evidence {
+  id          String   @id @default(cuid())
+  label       String
+  description String?
+  fileName    String?
+  filePath    String?
+  mimeType    String?
+  fileSize    Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  caseId String
+  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
 }
 
 enum CaseStatus {
