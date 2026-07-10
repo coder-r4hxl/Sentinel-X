@@ -36,18 +36,38 @@ model Case {
 }
 
 model Evidence {
-  id          String   @id @default(cuid())
+  id          String           @id @default(cuid())
   label       String
   description String?
   fileName    String?
   filePath    String?
   mimeType    String?
   fileSize    Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
-  caseId String
-  case   Case   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  caseId   String
+  case     Case              @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  analysis EvidenceAnalysis?
+}
+
+model EvidenceAnalysis {
+  id         String         @id @default(cuid())
+  status     AnalysisStatus @default(PENDING)
+  summary    String?
+  findings   Json?
+  riskScore  Int?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  evidenceId String   @unique
+  evidence   Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
+}
+
+enum AnalysisStatus {
+  PENDING
+  COMPLETED
+  FAILED
 }
 
 enum CaseStatus {
